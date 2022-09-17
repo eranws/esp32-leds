@@ -1,8 +1,8 @@
 #define CONFIG_USE_ONLY_LWIP_SELECT 1
 
 #include "includes.h"
-#include <song_offset_tracker.h>
-#include <fs_manager.h>
+#include "song_offset_tracker.h"
+#include "fs_manager.h"
 
 #include "SPIFFS.h"
 #include <NeoPixelAnimator.h>
@@ -11,12 +11,6 @@
 
 #include "watchdog.h"
 #include "comms.h"
-#include <esp_task_wdt.h>
-
-#ifndef NUM_LEDS
-#warning NUM_LEDS not definded. using default value of 300
-#define NUM_LEDS 300
-#endif // NUM_LEDS
 
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 NeoGamma<NeoGammaTableMethod> colorGamma;
@@ -360,7 +354,6 @@ void setup()
 
   disableCore0WDT();
 
-  //! global_anList = nullptr;
   global_songStartTime = 0;
 
   anListQueue = xQueueCreate(anListQueueSize, sizeof(NewSongMsg));
@@ -378,7 +371,7 @@ void setup()
   ok = fsManager.setup();
   Serial.println(ok ? " ok " : "FAIL");
 
-  PrintCorePrefix();
+  // PrintCorePrefix();
   // Serial.println("ReadObjectsConfigFile ");
   // ReadObjectsConfigFile("/objects-config");
 
