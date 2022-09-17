@@ -7,6 +7,7 @@
 #include <secrets.h>
 
 #define DATA_PIN 2
+#define COLOR_ORDER NeoRgbFeature // can also be NeoGrbFeature
 
 class RenderUtils
 {

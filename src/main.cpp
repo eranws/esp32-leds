@@ -1,12 +1,6 @@
 #define CONFIG_USE_ONLY_LWIP_SELECT 1
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <secrets.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#include <SD.h> // SD card library
-
+#include "includes.h"
 #include <song_offset_tracker.h>
 #include <fs_manager.h>
 
@@ -16,16 +10,13 @@
 #include "panel_config.h"
 
 #include "watchdog.h"
+#include "comms.h"
 #include <esp_task_wdt.h>
 
 #ifndef NUM_LEDS
 #warning NUM_LEDS not definded. using default value of 300
 #define NUM_LEDS 300
 #endif // NUM_LEDS
-
-#ifndef MQTT_BROKER_PORT
-#define MQTT_BROKER_PORT 1883
-#endif // MQTT_BROKER_PORT
 
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 NeoGamma<NeoGammaTableMethod> colorGamma;
@@ -60,8 +51,6 @@ void PrintCorePrefix()
   Serial.print(xPortGetCoreID());
   Serial.print("]: ");
 }
-
-// StaticJsonDocument<40000> doc;
 
 void CheckForSongStartTimeChange()
 {
@@ -172,78 +161,6 @@ void callback(char *topic, byte *payload, unsigned int length)
   Serial.println(topic);
 }
 
-void ConnectToWifi()
-{
-
-  if (WiFi.status() == WL_CONNECTED)
-    return;
-
-  while (true)
-  {
-    unsigned int connectStartTime = millis();
-    WiFi.disconnect();
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(SSID, WIFI_PASSWORD);
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(SSID);
-    while (millis() - connectStartTime < 10000)
-    {
-      Serial.print(".");
-      Core0WDSend(millis());
-      delay(1000);
-      Core0WDSend(millis());
-      if (WiFi.status() == WL_CONNECTED)
-      {
-        Serial.println("connected to wifi");
-        return;
-      }
-    }
-    Serial.println(" could not connect for 10 seconds. retry");
-  }
-}
-
-WiFiClient net;
-PubSubClient client(net);
-void ConnectToMessageBroker()
-{
-
-  if (client.connected())
-    return;
-
-  client.setServer(MQTT_BROKER_IP, MQTT_BROKER_PORT);
-  client.setCallback(callback);
-  StaticJsonDocument<128> json_doc;
-  json_doc["ThingName"] = THING_NAME;
-  json_doc["Alive"] = false;
-  char lastWillMsg[128];
-  serializeJson(json_doc, lastWillMsg);
-  Serial.println("connecting to mqtt");
-  if (client.connect(THING_NAME, MONITOR_TOPIC, 1, true, lastWillMsg))
-  {
-    Serial.print("  connected to message broker");
-    Serial.print(". monitor topic:");
-    Serial.print(MONITOR_TOPIC);
-    Serial.println();
-
-    String objectTopic = "objects-config/" + String(THING_NAME);
-    bool ok = client.subscribe(objectTopic.c_str(), 1);
-    Serial.printf("  subscribed to topic [%s] %s\n", objectTopic.c_str(), ok ? " ok " : "FAIL");
-
-    String currentSongTopic = "current-song";
-    ok = client.subscribe(currentSongTopic.c_str(), 1);
-    Serial.printf("  subscribed to topic [%s] %s\n", currentSongTopic.c_str(), ok ? " ok " : "FAIL");
-
-    String animationsTopic = "animations/" + String(THING_NAME) + "/#";
-    client.subscribe(animationsTopic.c_str(), 1);
-    Serial.printf("  subscribed to topic [%s] %s\n", animationsTopic.c_str(), ok ? " ok " : "FAIL");
-  }
-  else
-  {
-    Serial.print("mqtt connect failed. error state:");
-    Serial.println(client.state());
-  }
-}
-
 void ReadObjectsConfigFile(String filename)
 {
   File file = SPIFFS.open(filename.c_str());
@@ -269,19 +186,6 @@ void ReadObjectsConfigFile(String filename)
   file.close();
 }
 
-void DeleteAnListPtr()
-{
-  // const AnimationsList *ptrToDelete;
-  // if (xQueueReceive(deleteAnListQueue, &ptrToDelete, 0) == pdTRUE)
-  // {
-  // for (IAnimation *an : (*ptrToDelete))
-  // {
-  //   delete an;
-  // }
-  // delete ptrToDelete;
-  // }
-}
-
 // const AnimationsList *global_anList;
 int32_t global_songStartTime;
 
@@ -290,7 +194,7 @@ void SendMonitorMsg(char *buffer, size_t bufferSize)
   StaticJsonDocument<128> json_doc;
   json_doc["ThingName"] = THING_NAME;
   json_doc["Alive"] = true;
-  json_doc["WifiSignal"] = WiFi.RSSI();
+  json_doc["WifiSignal"] = wifiSignal();
   json_doc["millis"] = millis();
   // json_doc["global song start time"] = global_songStartTime;
   json_doc["global time"] = ((int32_t)(millis())) - global_songStartTime;
@@ -307,7 +211,10 @@ void MonitorLoop(void *parameter)
   unsigned int lastMonitorTime = millis();
   for (;;)
   {
-    DeleteAnListPtr();
+    // DeleteAnListPtr();
+    // if (xQueueReceive(deleteAnListQueue, &ptrToDelete, 0) == pdTRUE)
+    //   delete an;
+
     ConnectToWifi();
     ConnectToMessageBroker();
     unsigned int currTime = millis();
@@ -355,7 +262,7 @@ void MonitorLoop(void *parameter)
   }
 }
 
-void readBufferFromFile(File &file, uint8_t *buf, uint32_t pos,size_t size)
+void readBufferFromFile(File &file, uint8_t *buf, uint32_t pos, size_t size)
 {
   // Serial.print("Reading file: ");
   // Serial.println(path);
@@ -375,7 +282,7 @@ void readBufferFromFile(File &file, uint8_t *buf, uint32_t pos,size_t size)
   uint32_t end_of_file = file.position();
   file.seek(current_pos, fs::SeekSet);
   if (pos + size > end_of_file)
-  { 
+  {
     Serial.println("Trying to read beyond file");
     return;
   }
@@ -393,7 +300,8 @@ void readBufferFromFile(File &file, uint8_t *buf, uint32_t pos,size_t size)
   // file.close();
 }
 
-void beginSDCard(){
+void beginSDCard()
+{
   if (!SD.begin())
   {
     Serial.println("Card Mount Failed");
@@ -434,7 +342,7 @@ void beginSDCard(){
 void setup()
 {
   Serial.begin(115200);
-  
+
   beginSDCard();
 
   aniFile = SD.open(filename);
@@ -490,40 +398,6 @@ unsigned int lastSecond = 0;
 template <typename T_COLOR_FEATURE, typename T_METHOD>
 void renderFrame(uint8_t *buffer, NeoPixelBus<T_COLOR_FEATURE, T_METHOD> &strip)
 {
-
-#ifdef MONDEB
-  int p = 0;
-  for (int j = 0; j < PanelWidth; j++)
-  {
-    for (int i = 0; i < PanelHeight; i++)
-    {
-      if (j % 2 == 1)
-        p = j * PanelHeight + (PanelHeight - i);
-      else 
-        p = j * PanelHeight + i;
-
-      int r = buffer[timeSize + 3 * p + 0];
-      int g = buffer[timeSize + 3 * p + 1];
-      int b = buffer[timeSize + 3 * p + 2];
-
-      RgbColor color(r, g, b);
-      color = colorGamma.Correct(color);
-
-      r = color.G;
-
-      if (r < 64)
-        Serial.print(" ");
-      else if (r < 128)
-        Serial.print("░");
-      else if (r < 192)
-        Serial.print("▒");
-      else if (r < 256)
-        Serial.print("▓");
-    }
-    Serial.println("");
-  }
-#endif
-
   for (int i = 0; i < strip.PixelCount(); i++)
   {
     int r = buffer[timeSize + 3 * i + 0];
@@ -592,29 +466,12 @@ void loop()
     frame = currentFrame;
     if (aniFile.available() && aniFile.read(frameBuffer, headerSize) == headerSize)
     {
-      // if (frame % 1000 == 0)
-      // {
-      //   Serial.println(frame);
-      // }
+      frame % 1000 ? 0 : Serial.println(frame);
       renderFrame(frameBuffer, strip);
       // delay(fileSampleRateMs);
     }
   }
   strip.Show();
-
-  // while (true)
-  // {
-  //   currentFrame = frame;
-  //   // if (currentFrame % 1000 == 0)
-  //   // {
-  //   Serial.print("Current frame: ");
-  //   Serial.println(currentFrame);
-  // // }
-
-  //   readBufferFromFile(aniFile, frameBuffer, currentFrame * headerSize, headerSize);
-
-  //   frame++;
-  // }
 
   int animationTime = frameBuffer[0];
 
@@ -630,4 +487,4 @@ void loop()
   // }
 
   vTaskDelay(5);
-  }
+}
