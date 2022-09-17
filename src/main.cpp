@@ -5,12 +5,10 @@
 #include "fs_manager.h"
 
 #include "SPIFFS.h"
-#include <NeoPixelAnimator.h>
-#include <NeoPixelBus.h>
-#include "panel_config.h"
 
 #include "watchdog.h"
 #include "comms.h"
+#include "pixels.h"
 
 SongOffsetTracker songOffsetTracker;
 // AnimationsContainer animationsContainer;

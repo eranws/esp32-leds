@@ -1,6 +1,10 @@
 // pixels.h
 #include "includes.h"
 
+#include <NeoPixelAnimator.h>
+#include <NeoPixelBus.h>
+#include "panel_config.h"
+
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 NeoGamma<NeoGammaTableMethod> colorGamma;
 
