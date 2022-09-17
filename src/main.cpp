@@ -12,9 +12,6 @@
 #include "watchdog.h"
 #include "comms.h"
 
-NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-NeoGamma<NeoGammaTableMethod> colorGamma;
-
 SongOffsetTracker songOffsetTracker;
 // AnimationsContainer animationsContainer;
 FsManager fsManager;
@@ -388,20 +385,6 @@ void setup()
 unsigned int lastPrint1Time = millis();
 unsigned int lastSecond = 0;
 
-template <typename T_COLOR_FEATURE, typename T_METHOD>
-void renderFrame(uint8_t *buffer, NeoPixelBus<T_COLOR_FEATURE, T_METHOD> &strip)
-{
-  for (int i = 0; i < strip.PixelCount(); i++)
-  {
-    int r = buffer[timeSize + 3 * i + 0];
-    int g = buffer[timeSize + 3 * i + 1];
-    int b = buffer[timeSize + 3 * i + 2];
-
-    RgbColor color(r, g, b);
-    color = colorGamma.Correct(color);
-    strip.SetPixelColor(i, color);
-  }
-}
 
 unsigned long int frame = 0;
 void loop()
