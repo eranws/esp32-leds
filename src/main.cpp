@@ -14,6 +14,8 @@
 #include <NeoPixelAnimator.h>
 #include <NeoPixelBus.h>
 #include "panel_config.h"
+
+#include "watchdog.h"
 #include <esp_task_wdt.h>
 
 #ifndef NUM_LEDS
@@ -24,8 +26,6 @@
 #ifndef MQTT_BROKER_PORT
 #define MQTT_BROKER_PORT 1883
 #endif // MQTT_BROKER_PORT
-
-const unsigned int WD_TIMEOUT_MS = 2000;
 
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 NeoGamma<NeoGammaTableMethod> colorGamma;
@@ -54,9 +54,6 @@ int32_t lastReportedSongStartTime = 0;
 QueueHandle_t deleteAnListQueue;
 const int deleteAnListQueueSize = 10;
 
-QueueHandle_t wdQueue;
-const int wdQueueSize = 10;
-
 void PrintCorePrefix()
 {
   Serial.print("[");
@@ -65,36 +62,6 @@ void PrintCorePrefix()
 }
 
 // StaticJsonDocument<40000> doc;
-
-void Core0WDSend(unsigned int currMillis)
-{
-  static unsigned int lastWdSendTime = 0;
-  if (currMillis - lastWdSendTime > WD_TIMEOUT_MS)
-  {
-    // Serial.println("[0] send wd msg from core 0 to core 1");
-    int unused = 0;
-    xQueueSend(wdQueue, &unused, 5);
-    lastWdSendTime = currMillis;
-  }
-}
-
-void Core0WdReceive(unsigned int currMillis)
-{
-  static unsigned int lastCore0WdReceiveTime = 0;
-  int unused;
-  if (xQueueReceive(wdQueue, &unused, 0) == pdTRUE)
-  {
-    lastCore0WdReceiveTime = currMillis;
-  }
-
-  unsigned int timeSinceWdReceive = currMillis - lastCore0WdReceiveTime;
-  // Serial.print("[0] timeSinceWdReceive: ");
-  // Serial.println(timeSinceWdReceive);
-  if (timeSinceWdReceive > (3 * WD_TIMEOUT_MS))
-  {
-    ESP.restart();
-  }
-}
 
 void CheckForSongStartTimeChange()
 {
