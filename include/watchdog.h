@@ -2,8 +2,8 @@
 #include <Arduino.h>
 const unsigned int WD_TIMEOUT_MS = 2000;
 
-QueueHandle_t wdQueue;
 const int wdQueueSize = 10;
+QueueHandle_t wdQueue = xQueueCreate(wdQueueSize, sizeof(int));
 
 void Core0WDSend(unsigned int currMillis)
 {
