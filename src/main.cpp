@@ -55,8 +55,11 @@ void setup()
 }
 
 unsigned long int frame = -1;
+unsigned long loopCount = -1;
 void loop()
 {
+  loopCount++;
+
   int32_t songStartTime;
   if (xQueueReceive(anListQueue, &songStartTime, 0) == pdTRUE)
   {
@@ -107,8 +110,10 @@ void loop()
   float cfps = 1e6 / diff;
   fps = 0.9 * fps + 0.1 * cfps;
   last += diff;
-
-  Serial.printf("fps: %f  diff: %d \n", fps, diff);
+  if (loopCount % 100 == 0)
+  {
+    Serial.printf("fps: %f  diff: %d \n", fps, diff);
+  }
 
   strip.Show();
 
