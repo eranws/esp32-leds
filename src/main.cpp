@@ -4,7 +4,7 @@
 #include "song_offset_tracker.h"
 // #include "fs_manager.h"
 
-#include "watchdog.h"
+// #include "watchdog.h"
 #include "comms.h"
 #include "pixels.h"
 #include "sdcard.h"
@@ -132,7 +132,7 @@ void MonitorLoop(void *parameter)
     ConnectToWifi();
     ConnectToMessageBroker();
     unsigned int currTime = millis();
-    Core0WDSend(currTime);
+    // Core0WDSend(currTime);
     if (currTime - lastMonitorTime >= 1000)
     {
       char monitorMsg[128];
@@ -173,6 +173,7 @@ void MonitorLoop(void *parameter)
 void setup()
 {
   Serial.begin(115200);
+  disableCore0WDT();
 
   beginSDCard();
 
@@ -188,8 +189,6 @@ void setup()
 
   strip.Begin();
   strip.Show();
-
-  disableCore0WDT();
 
   global_songStartTime = 0;
 
@@ -214,7 +213,7 @@ unsigned long int frame = -1;
 void loop()
 {
   unsigned long currentMillis = millis();
-  Core0WdReceive(currentMillis);
+  // Core0WdReceive(currentMillis);
 
   if (currentMillis - lastPrint1Time >= 5000)
   {
