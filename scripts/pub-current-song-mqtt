@@ -1,0 +1,1 @@
+mosquitto_pub -h 10.0.0.200 -t "current-song" -m "{\"file_id\": \"biaxident.wav\", \"start_offset_ms\":0}"
