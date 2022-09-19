@@ -209,7 +209,7 @@ void setup()
 }
 
 unsigned int lastPrint1Time = millis();
-unsigned long int frame = 0;
+unsigned long int frame = -1;
 
 void loop()
 {
@@ -238,9 +238,6 @@ void loop()
 
   int32_t songOffset = getGlobalTime();
   int32_t currentFrame = songOffset / fileSampleRateMs;
-  // int32_t frames[] = {0, 1500000};
-  // int32_t currentFrame = frame;
-  // Serial.println(currentFrame);
   if (frame != currentFrame)
   {
     aniFile.seek(currentFrame * headerSize);
@@ -249,23 +246,9 @@ void loop()
     {
       frame % 1000 ? 0 : Serial.println(frame);
       renderFrame(frameBuffer, strip);
-      // delay(fileSampleRateMs);
     }
   }
   strip.Show();
-
-  int animationTime = frameBuffer[0];
-
-  // if (currentFrame % 1000 == 0)
-  // {
-  //   Serial.print("Animation time: ");
-  //   Serial.println(animationTime);
-  // }
-
-  // if (animationTime != lastAnimationTime) {
-  //   renderFrame(frameBuffer, strip);
-  //   lastAnimationTime = animationTime;
-  // }
 
   vTaskDelay(5);
 }

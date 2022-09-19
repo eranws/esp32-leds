@@ -9,8 +9,8 @@ const uint8_t TileHeight = 1;
 const uint16_t PixelCount = PanelWidth * PanelHeight * TileWidth * TileHeight;
 const uint8_t PixelPin = 2;
 
-// file format
-const String filename = "/tstst1024.bin";
+// const String filename = "/tstst1024.bin";
+const String filename = "/tstst.bin";
 
 const int32_t timeSize = 4;
 const int32_t bufSize = PixelCount * 3;
