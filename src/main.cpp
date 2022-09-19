@@ -17,7 +17,6 @@ void PrintCorePrefix()
   Serial.printf("[%d]", xPortGetCoreID());
 }
 
-
 void setup()
 {
   Serial.begin(115200);
@@ -72,10 +71,28 @@ void loop()
   }
 
   int32_t songOffset = getGlobalTime();
-  int32_t currentFrame = songOffset / fileSampleRateMs;
+
+  const int32_t fileSampleRateMillis = 10;
+  int32_t currentFrame = songOffset / fileSampleRateMillis;
+
+  // Serial.print("currentFrame: ");
+  // Serial.print(currentFrame);
+
   if (frame != currentFrame)
   {
-    aniFile.seek(currentFrame * headerSize);
+    // Serial.print("aniFile.position(): ");
+    // Serial.print(aniFile.position());
+    // Serial.print("currentFrame * headerSize: ");
+    // Serial.print(currentFrame * headerSize);
+    if (currentFrame * headerSize != aniFile.position())
+    {
+      // Serial.print("Seek");
+      aniFile.seek(currentFrame * headerSize);
+    }
+    else
+    {
+      // Serial.print("----");
+    }
     frame = currentFrame;
     if (aniFile.available() && aniFile.read(frameBuffer, headerSize) == headerSize)
     {
@@ -83,6 +100,16 @@ void loop()
       renderFrame(frameBuffer, strip);
     }
   }
+  static float fps = 0.0f;
+  static auto last = micros();
+  auto now = micros();
+  auto diff = now - last;
+  float cfps = 1e6 / diff;
+  fps = 0.9 * fps + 0.1 * cfps;
+  last += diff;
+
+  Serial.printf("fps: %f  diff: %d \n", fps, diff);
+
   strip.Show();
 
   vTaskDelay(5);

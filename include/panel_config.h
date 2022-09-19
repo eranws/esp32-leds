@@ -15,4 +15,3 @@ const String filename = "/tstst.bin";
 const int32_t timeSize = 4;
 const int32_t bufSize = PixelCount * 3;
 const int32_t headerSize = bufSize + timeSize;
-const int32_t fileSampleRateMs = 10;
