@@ -3,13 +3,6 @@
 
 #include <TimeSync.hpp>
 
-struct CurrentSongDetails
-{
-    bool valid;
-    String songName;
-    int32_t offsetMs;
-};
-
 class SongOffsetTracker
 {
 public:
