@@ -2,20 +2,13 @@
 
 #include "includes.h"
 #include "song_offset_tracker.h"
-// #include "fs_manager.h"
-
-// #include "watchdog.h"
 #include "comms.h"
 #include "pixels.h"
 #include "sdcard.h"
 
 SongOffsetTracker songOffsetTracker;
-// FsManager fsManager;
-
 TaskHandle_t Task1;
-
 File aniFile;
-
 uint8_t frameBuffer[headerSize];
 int lastAnimationTime = -1;
 
@@ -30,9 +23,7 @@ int32_t lastReportedSongStartTime = 0;
 
 void PrintCorePrefix()
 {
-  Serial.print("[");
-  Serial.print(xPortGetCoreID());
-  Serial.print("]: ");
+  Serial.printf("[%d]", xPortGetCoreID());
 }
 
 void SendAnListUpdate()
@@ -50,14 +41,12 @@ void SendAnListUpdate()
     msg.songStartTime = lastReportedSongStartTime;
     if (msg.songStartTime != 0)
     {
-      //! msg.anList = animationsContainer.SetFromJsonFile(currFileName, doc);
       Serial.println("todo: update animation file");
     }
     else
     {
       PrintCorePrefix();
       Serial.println("ignoring an list update since song start time is not valid yet");
-      //! msg.anList = nullptr;
     }
   }
   else
@@ -132,7 +121,6 @@ void MonitorLoop(void *parameter)
     ConnectToWifi();
     ConnectToMessageBroker();
     unsigned int currTime = millis();
-    // Core0WDSend(currTime);
     if (currTime - lastMonitorTime >= 1000)
     {
       char monitorMsg[128];
@@ -143,7 +131,6 @@ void MonitorLoop(void *parameter)
     if (currTime - lastReportTime >= 5000)
     {
       lastReportTime = currTime;
-
       PrintCorePrefix();
       Serial.print("status: millis: "), Serial.print(millis());
       Serial.print(" wifi:"), Serial.print(WiFi.status() == WL_CONNECTED);
@@ -173,7 +160,7 @@ void MonitorLoop(void *parameter)
 void setup()
 {
   Serial.begin(115200);
-  disableCore0WDT();
+  // disableCore0WDT();
 
   beginSDCard();
 
@@ -207,21 +194,9 @@ void setup()
       0);            /* Core where the task should run */
 }
 
-unsigned int lastPrint1Time = millis();
 unsigned long int frame = -1;
-
 void loop()
 {
-  unsigned long currentMillis = millis();
-  // Core0WdReceive(currentMillis);
-
-  if (currentMillis - lastPrint1Time >= 5000)
-  {
-    PrintCorePrefix();
-    Serial.println("core 1 alive");
-    lastPrint1Time = currentMillis;
-  }
-
   NewSongMsg newMsg;
   if (xQueueReceive(anListQueue, &newMsg, 0) == pdTRUE)
   {

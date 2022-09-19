@@ -28,9 +28,7 @@ void ConnectToWifi()
         while (millis() - connectStartTime < 10000)
         {
             Serial.print(".");
-            // Core0WDSend(millis());
             delay(1000);
-            // Core0WDSend(millis());
             if (WiFi.status() == WL_CONNECTED)
             {
                 Serial.println("connected to wifi");
