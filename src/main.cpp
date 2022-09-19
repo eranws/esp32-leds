@@ -160,7 +160,7 @@ void MonitorLoop(void *parameter)
 void setup()
 {
   Serial.begin(115200);
-  // disableCore0WDT();
+  disableCore0WDT();
 
   beginSDCard();
 
