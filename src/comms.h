@@ -151,6 +151,7 @@ void callback(char *topic, byte *payload, unsigned int length)
         SendAnListUpdate();
     }
 
+    Serial.printf("[%d]", xPortGetCoreID());
     Serial.print("done handling mqtt callback: ");
     Serial.println(topic);
 }
@@ -161,19 +162,21 @@ void SendStartTimeToRenderCore()
         return;
 
     int32_t songStartTime = songOffsetTracker.GetSongStartTime();
-    Serial.printf("[%d]", xPortGetCoreID());
 
+    Serial.printf("[%d]", xPortGetCoreID());
     Serial.println("updating time of current song start");
     xQueueSend(anListQueue, &songStartTime, portMAX_DELAY);
 }
 
 void SendAnListUpdate()
 {
+    Serial.printf("[%d]", xPortGetCoreID());
     Serial.println("SendAnListUpdate");
 
     int32_t songStartTime = 0;
     if (songOffsetTracker.IsSongPlaying())
     {
+        Serial.printf("[%d]", xPortGetCoreID());
         Serial.println("IsSongPlaying");
         String currFileName = songOffsetTracker.GetCurrentFile();
         Serial.printf("[%d]", xPortGetCoreID());
@@ -182,6 +185,7 @@ void SendAnListUpdate()
         songStartTime = songOffsetTracker.GetSongStartTime();
         if (songStartTime != 0)
         {
+            Serial.printf("[%d]", xPortGetCoreID());
             Serial.println("todo: update animation file");
         }
         else
