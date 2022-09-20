@@ -78,31 +78,20 @@ void loop()
   const int32_t fileSampleRateMillis = 10;
   int32_t currentFrame = songOffset / fileSampleRateMillis;
 
-  // Serial.print("currentFrame: ");
-  // Serial.print(currentFrame);
-
   if (frame != currentFrame)
   {
-    // Serial.print("aniFile.position(): ");
-    // Serial.print(aniFile.position());
-    // Serial.print("currentFrame * headerSize: ");
-    // Serial.print(currentFrame * headerSize);
     if (currentFrame * headerSize != aniFile.position())
     {
-      // Serial.print("Seek");
       aniFile.seek(currentFrame * headerSize);
-    }
-    else
-    {
-      // Serial.print("----");
     }
     frame = currentFrame;
     if (aniFile.available() && aniFile.read(frameBuffer, headerSize) == headerSize)
     {
-      frame % 1000 ? 0 : Serial.println(frame);
       renderFrame(frameBuffer, strip);
     }
   }
+
+  // fps
   static float fps = 0.0f;
   static auto last = micros();
   auto now = micros();
