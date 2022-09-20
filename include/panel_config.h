@@ -9,9 +9,10 @@ const uint8_t TileHeight = 1;
 const uint16_t PixelCount = PanelWidth * PanelHeight * TileWidth * TileHeight;
 const uint8_t PixelPin = 2;
 
-// const String filename = "/tstst1024.bin";
-const String filename = "/tstst.bin";
-
+// const String filename = "/tstst.bin";
+// const String filename = "/p1.bin";
+const String filename = "/p2.bin";
+// const String filename = "/tststpy.bin";
 const int32_t timeSize = 4;
 const int32_t bufSize = PixelCount * 3;
 const int32_t headerSize = bufSize + timeSize;
