@@ -24,7 +24,7 @@ void setup()
 
   beginSDCard();
 
-  aniFile = SD.open(filename);
+  aniFile = SD.open(FILENAME);
 
   if (!aniFile)
   {
