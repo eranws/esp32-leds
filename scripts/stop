@@ -1,0 +1,1 @@
+curl -X PUT -H "Content-Type: application/json" -d "{}" "http://10.0.0.200:8080/api/current-song"
