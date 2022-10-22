@@ -74,7 +74,7 @@ void loop()
   }
 
   int32_t songOffset = getGlobalTime();
-  songOffset %= 10000; // loop 10 sec
+  // songOffset %= 10000; // loop 10 sec
   const int32_t fileSampleRateMillis = 10;
   int32_t currentFrame = songOffset / fileSampleRateMillis;
 
